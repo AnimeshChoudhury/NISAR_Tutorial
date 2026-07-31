@@ -1,0 +1,23 @@
+# Conda environment (created locally via `conda create -p venv`)
+venv/
+
+# Sample NISAR data (real .h5 files, not committed — see docs/data_access.md)
+SampleData/*.h5
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+*.local
