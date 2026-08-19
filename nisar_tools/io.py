@@ -294,6 +294,20 @@ class GUNWProduct(_BaseProduct):
     def get_wrapped_interferogram(self, frequency: str = "A", polarization: str = "HH") -> h5py.Dataset:
         return self._grids_group()[f"frequency{frequency}/wrappedInterferogram/{polarization}/wrappedInterferogram"]
 
+    def get_ionospheric_phase_screen(self, frequency: str = "A", polarization: str = "HH") -> h5py.Dataset:
+        """
+        Lazy handle to the `ionospherePhaseScreen` layer -- the product's own estimate
+        of the ionospheric phase contribution (derived via split-spectrum processing),
+        in the same units (radians) and on the same grid as `unwrappedPhase`. L-band is
+        far more susceptible to ionospheric delay than shorter-wavelength SAR bands
+        (delay scales with wavelength squared), so this layer is the direct way to check
+        whether a large-scale phase pattern is ionospheric rather than atmospheric/
+        deformation in origin -- see Module 04. Not guaranteed present in every GUNW
+        product (depends on processing options); this raises a KeyError if absent, same
+        as get_unwrapped_layer.
+        """
+        return self.get_unwrapped_layer("ionospherePhaseScreen", frequency, polarization)
+
     def list_polarizations(self, frequency: str = "A") -> list[str]:
         dset = self._grids_group()[f"frequency{frequency}/listOfPolarizations"]
         return list(_decode(dset[()]))

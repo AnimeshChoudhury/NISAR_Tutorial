@@ -63,9 +63,15 @@ flowchart LR
 | [01 — RSLC Fundamentals](modules/01_rslc_fundamentals/notebook.ipynb) | File 1 | Reading complex SLC, amplitude/phase, multilooking, speckle statistics | Illustrates a technique on real data — not a land-cover finding |
 | [02 — Repeat-Pass Change Detection](modules/02_repeat_pass_change_detection/notebook.ipynb) | Files 1 & 2 | Geometric coregistration, backscatter differencing | Change-detection technique — not tied to a documented event |
 | [03 — GCOV HH/HV Ratio Analysis](modules/03_gcov_polarimetric_analysis/notebook.ipynb) | File 3 | Covariance-term reading, HH/HV power ratio, illustrative threshold split | Ratio technique only — this file has diagonal covariance terms only, so no true decomposition; the threshold split is illustrative, not a validated classification |
-| [04 — InSAR Deformation Basics](modules/04_insar_deformation_basics/notebook.ipynb) | File 4 | Unwrapped phase, coherence-based masking, phase-to-displacement theory | Interferometric technique — not a validated deformation measurement |
+| [04 — InSAR Deformation Basics](modules/04_insar_deformation_basics/notebook.ipynb) | File 4 | Unwrapped phase, coherence-based masking, phase-to-displacement theory | Interferometric technique — not a validated deformation measurement; large-scale phase gradient checked against the product's own ionospherePhaseScreen layer and found consistent with ionospheric phase contribution, not a generic atmospheric ramp |
 | [05 — L-band vs S-band Comparison](modules/05_lband_vs_sband_comparison/notebook.ipynb) | Files 3 & 5 | Cross-band backscatter comparison over a confirmed shared footprint | Frequency-physics demonstration — not a land-cover classification |
 | [06 — S-band GCOV Polarimetric Exploration](modules/06_sband_gcov_standalone/notebook.ipynb) | File 5 | HH-HV correlation coefficient, estimator-bias check | Dual-pol correlation only — not full polarimetric decomposition (that needs quad-pol data) |
+
+## Corrections
+
+Interpretations here get revised when a closer, more specific check changes the
+conclusion — see [CHANGELOG.md](CHANGELOG.md) for a log of what's changed since a
+module was first written, and why.
 
 ## What this repo is — and isn't
 
@@ -92,8 +98,9 @@ flowchart LR
   displacement estimate here.
 - Radiometrically or atmospherically corrected beyond what each product delivers by
   default. Module 02 finds and flags an uncorrected cross-acquisition calibration
-  difference; Module 04 finds and flags an uncorrected atmospheric/orbital phase ramp —
-  both are identified, neither is corrected.
+  difference; Module 04 finds and flags an uncorrected ionospheric phase contribution —
+  both are identified, neither is corrected. (See [CHANGELOG.md](CHANGELOG.md) for how
+  Module 04's conclusion evolved.)
 - A substitute for a full NISAR processing pipeline or a SAR/InSAR course — derivations
   and production-grade calibration/coregistration are explicitly out of scope (Module 00
   says so directly).
@@ -130,6 +137,7 @@ notebook rather than quietly fixed and hidden.
 | 01 | A center-window speckle measurement gave a coefficient of variation of 5.3, vs. the ~1.0 theory predicts for single-look speckle | The window spanned a canal/road feature and mixed field boundaries — real land-cover heterogeneity, not speckle | Searched the window for its most homogeneous sub-patch; even that patch (CV 2.15) still showed real texture, which is explained rather than hidden |
 | 02 | The backscatter difference map looked like widespread real change (72% of pixels beyond a 3 dB threshold) | Broad vertical banding consistent with a range-dependent radiometric difference between the mixed-mode and full-bandwidth acquisitions, not surface change | The banding was far too wide and smooth to be field-scale change; traced to the two files' different processing modes |
 | 04 | A large, smooth unwrapped-phase gradient (~60 radians) could be read as a deformation signal | Converting it to displacement via this file's real L-band wavelength gives over a meter of apparent motion in 12 days — implausible, and much more consistent with a residual atmospheric/orbital phase ramp | Applied the phase-to-displacement equation with the real wavelength as a plausibility check before any interpretation |
+| 04 | The large-scale phase gradient was described as consistent with a generic "atmospheric/orbital ramp," a reasonable catch-all once deformation was ruled out as implausible | It's consistent with ionospheric phase contribution specifically — expected at L-band, where ionospheric delay scales with wavelength squared | Compared the gradient directly against the product's own `ionospherePhaseScreen` layer: row-mean correlation r≈0.93, and gradient magnitude matching to within ~2% |
 | 06 | The HH-HV correlation map (mean \|rho\| = 0.52) looked spatially structured, and a first draft claimed it showed the same river feature visible in Module 05's backscatter | It didn't — and averaging more samples drove the mean magnitude down to 0.08, the signature of a biased estimator at low true correlation, not real structure | Ran a multilook bias check before trusting the visual impression, mirrored by a controlled synthetic demo in Module 00 |
 
 Module 00 now works through the same two statistical traps (speckle CV, correlation

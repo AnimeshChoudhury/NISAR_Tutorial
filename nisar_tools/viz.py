@@ -22,7 +22,16 @@ def _as_masked(arr: np.ndarray, valid_mask: np.ndarray | None) -> np.ndarray:
 
 
 def _percentile_clip(arr, low: float, high: float) -> tuple[float, float]:
-    finite = arr.compressed() if np.ma.isMaskedArray(arr) else arr[np.isfinite(arr)]
+    """
+    Percentile bounds over the finite, unmasked values only. `.compressed()` alone is
+    not enough: a masked array's unmasked region can still contain its own NaNs (e.g.
+    a layer whose own no-data footprint doesn't exactly match the valid_mask it was
+    plotted with -- ionospherePhaseScreen vs. unwrappedPhase in Module 04 is a real
+    example) and np.percentile silently propagates those to NaN, which would otherwise
+    collapse vmin/vmax to a degenerate (or NaN) range without any visible error.
+    """
+    values = arr.compressed() if np.ma.isMaskedArray(arr) else arr
+    finite = values[np.isfinite(values)]
     if finite.size == 0:
         return 0.0, 1.0
     return float(np.percentile(finite, low)), float(np.percentile(finite, high))

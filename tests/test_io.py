@@ -12,6 +12,7 @@ intentionally excluded from version control (see docs/data_access.md).
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from nisar_tools.io import GCOVProduct, GUNWProduct, RSLCProduct, open_product
@@ -127,6 +128,24 @@ class TestGUNWReferenceSecondaryPairing:
         with open_product(GUNW) as prod:
             layers = set(prod.list_unwrapped_layers("A", "HH"))
             assert {"unwrappedPhase", "coherenceMagnitude", "connectedComponents"}.issubset(layers)
+
+    def test_gunw_ionospheric_phase_screen_loads(self):
+        """This sample product includes ionospherePhaseScreen (not all GUNW products
+        necessarily do, depending on processing options) -- confirm the dedicated
+        accessor reads it lazily, on the same grid as unwrappedPhase, with sensible
+        (non-empty, finite-somewhere) values."""
+        with open_product(GUNW) as prod:
+            iono = prod.get_ionospheric_phase_screen("A", "HH")
+            phase = prod.get_unwrapped_layer("unwrappedPhase", "A", "HH")
+            assert iono.shape == phase.shape
+            data = iono[:]
+            finite = data[np.isfinite(data)]
+            assert finite.size > 0
+            assert np.isfinite(finite).all()
+            # sanity range: a real ionospheric screen should vary but stay within a
+            # physically plausible few tens of radians, not blow up or be all-zero
+            assert finite.min() != finite.max()
+            assert abs(finite).max() < 1000
 
 
 @requires_sample_data
